@@ -33,7 +33,7 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        device = TPMSBluetoothDeviceData(discovery_info)
+        device = DeviceData(discovery_info)
         unique_id = device.get_unique_id()
         if not unique_id:    # if none
             return self.async_abort(reason="not_supported")
