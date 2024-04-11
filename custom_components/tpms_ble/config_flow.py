@@ -70,19 +70,11 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle the user step to pick a discovered device or continue without a device."""
         errors = {}
-
+    
         if user_input is not None:
             if user_input.get("confirm_setup", False):
                 # User has confirmed setup without selecting a specific device
                 return self.async_create_entry(title="TPMS", data={})
-            else:
-                # This block would be executed if a device is selected
-                address = user_input[CONF_ADDRESS]
-                await self.async_set_unique_id(address, raise_on_progress=False)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=self._discovered_devices[address], data=user_input
-                )
     
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass, False):
@@ -95,26 +87,21 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
                     device.title or device.get_device_name() or discovery_info.name
                 )
         _LOGGER.warning("Loop abgeschlossen")
-        
+
         if not self._discovered_devices:
-            # No devices discovered. Allow user to confirm setup without devices.
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {vol.Optional("confirm_setup", default=False): bool}
-                ),
-                errors=errors,
-                description_placeholders={
-                    "message": "No devices found. Would you like to set up the integration and add devices later?"
-                }
-            )
+                # No devices discovered. Allow user to confirm setup without devices.
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {vol.Optional("confirm_setup", default=False): bool}
+                    ),
+                    errors=errors,
+                    description_placeholders={
+                        "message": "No devices found. Would you like to set up the integration and add devices later?"
+                    }
+                )
+                
+            # Adjusted logic to continue without specifying devices
+            return self.async_create_entry(title="TPMS", data={})
         
-        # Show form to select a device if devices are discovered
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
-            ),
-            errors=errors
-        )
 
