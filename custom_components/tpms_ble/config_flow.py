@@ -87,7 +87,7 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_devices[address] = (
                     device.title or device.get_device_name() or discovery_info.name
                 )
-        _LOGGER.warning("Test adsaodj")
+        _LOGGER.warning("Loop abgeschlossen")
         
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
