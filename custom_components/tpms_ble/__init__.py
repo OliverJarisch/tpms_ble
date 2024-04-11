@@ -29,21 +29,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPMS BLE device from a config entry."""
     address = entry.unique_id
-    assert address is not None
-    data = TPMSBluetoothDeviceData()
-    coordinator = hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = PassiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address=address,
-        mode=BluetoothScanningMode.PASSIVE,
-        update_method=data.update,
-    )
+    if address is None:
+        _LOGGER.info("Skipping setup for non-TPMS device with config entry: %s", entry.as_dict())
+        return False
+        
+    # Create a data coordinator instance (you may or may not need this depending on your implementation)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TPMSBluetoothDeviceData()
+
+    # Forward the entry setup to the sensor platform, which will create the sensor entities
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(
-        async_track_time_interval(hass, async_scan_for_tpms_sensors, SCAN_INTERVAL)
-    )
 
     return True
 
@@ -55,6 +49,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return unload_ok
 
-async def async_scan_for_tpms_sensors(hass: HomeAssistant):
-    """Scan for new TPMS sensors and set them up."""
     
