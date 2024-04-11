@@ -9,7 +9,6 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 import voluptuous as vol
 
