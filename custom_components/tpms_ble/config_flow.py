@@ -1,91 +1,104 @@
-"""Parser for TPMS BLE advertisements."""
+"""Config flow for TPMS BLE integration."""
 from __future__ import annotations
 
+from typing import Any
 import logging
-from struct import unpack
-from dataclasses import dataclass
-from enum import Enum, auto
 
-from bluetooth_data_tools import short_address
-from bluetooth_sensor_state_data import BluetoothData
-from home_assistant_bluetooth import BluetoothServiceInfo
-from sensor_state_data.enum import StrEnum
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.data_entry_flow import FlowResult
+import voluptuous as vol
+
+from .const import DOMAIN
+from .tpms_parser import TPMSBluetoothDeviceData as DeviceData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TPMSSensor(StrEnum):
+class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for TPMS."""
 
-    PRESSURE = "pressure"
-    TEMPERATURE = "temperature"
-    BATTERY = "battery"
-    SIGNAL_STRENGTH = "signal_strength"
+    VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovery_info: BluetoothServiceInfoBleak | None = None
+        self._discovered_device: DeviceData | None = None
+        self._discovered_devices: dict[str, str] = {}
 
-class TPMSBinarySensor(StrEnum):
-    ALARM = "alarm"
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> FlowResult:
+        """Handle the bluetooth discovery step."""
+        device = TPMSBluetoothDeviceData(discovery_info)
+        unique_id = device.get_unique_id()
+        if not unique_id:
+            return self.async_abort(reason="not_supported")
 
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
 
-TPMS_MANUFACTURER = 256 # indicator of the manufacturer Data set
+        self._discovery_info = discovery_info
+        self._discovered_device = device
+        return await self.async_step_bluetooth_confirm()
+        
+    async def async_step_bluetooth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        assert self._discovered_device is not None
+        device = self._discovered_device
+        assert self._discovery_info is not None
+        discovery_info = self._discovery_info
+        title = device.title or device.get_device_name() or discovery_info.name
+        if user_input is not None:
+            return self.async_create_entry(title=title, data={})
 
-
-class TPMSBluetoothDeviceData(BluetoothData):
-    """Data for TPMS BLE sensors."""
-
-    def _start_update(self, service_info: BluetoothServiceInfo) -> None:
-        """Update from BLE advertisement data."""
-        _LOGGER.debug("Parsing TPMS BLE advertisement data: %s", service_info)
-        manufacturer_data = service_info.manufacturer_data
-        address = service_info.address
-        if TPMS_MANUFACTURER not in manufacturer_data:
-            return None
-
-        mfr_data = manufacturer_data[TPMS_MANUFACTURER]
-        self.set_device_manufacturer("TPMS")
-
-        self._process_mfr_data(address, mfr_data)
-
-    def _process_mfr_data(
-        self,
-        address: str,
-        data: bytes,
-    ) -> None:
-        """Parser for TPMS sensors."""
-        _LOGGER.debug("Parsing TPMS sensor: %s", data)
-        msg_length = len(data)
-        if msg_length != 16:
-            return
-    
-        device_id = data[4:6]  # Extrahiere die Geräte-ID (86 F3 in Ihrem Beispiel)
-        temperature = int.from_bytes(data[5:6], byteorder='big', signed=False) - 168  # Temperatur (c1 in Ihrem Beispiel)
-        pressure = int.from_bytes(data[14:16], byteorder='big', signed=False) / 10000  # Druck (83 9c in Ihrem Beispiel)
-    
-
-        name = f"TPMS {short_address(address)}"
-        self.set_device_type(name)
-        self.set_device_name(name)
-        self.set_title(name)
-
-        self.update_sensor(
-            str(TPMSSensor.PRESSURE), None, pressure, None, "Pressure"
-        )
-        self.update_sensor(
-            str(TPMSSensor.TEMPERATURE), None, temperature, None, "Temperature"
+        self._set_confirm_only()
+        placeholders = {"name": title}
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
-    def get_unique_id(self):
-        """Generate a unique ID for the TPMS sensor."""
-        # Extract the last 6 characters of the MAC address (last 3 octets)
-        mac_suffix = self._address.replace(":", "")[-6:].upper()  # e.g., "1386F3"
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the user step to pick a discovered device or continue without a device."""
+        errors = {}
+    
+        if user_input is not None:
+            if user_input.get("confirm_setup", False):
+                # User has confirmed setup without selecting a specific device
+                return self.async_create_entry(title="TPMS", data={})
+    
+        current_addresses = self._async_current_ids()
+        for discovery_info in async_discovered_service_info(self.hass, False):
+            address = discovery_info.address
+            if address in current_addresses or address in self._discovered_devices:
+                continue
+            device = DeviceData()
+            if device.supported(discovery_info):
+                self._discovered_devices[address] = (
+                    device.title or device.get_device_name() or discovery_info.name
+                )
+        _LOGGER.warning("Loop abgeschlossen")
 
-        # Convert the manufacturer data to a hex string
-        manufacturer_data_hex = ''.join(format(x, '02X') for x in self._mfr_data)
-
-        # Check if the manufacturer data starts with the expected sequence
-        if manufacturer_data_hex.startswith("0215B54A"):
-            # Use the consistent part of the MAC address as the unique ID
-            unique_id = f"tpms_{mac_suffix}"
-            return unique_id
-        else:
-            # Handle the case where the manufacturer data does not match what we expect
-            return None
+        if not self._discovered_devices:
+                # No devices discovered. Allow user to confirm setup without devices.
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {vol.Optional("confirm_setup", default=False): bool}
+                    ),
+                    errors=errors,
+                    description_placeholders={
+                        "message": "No devices found. Would you like to set up the integration and add devices later?"
+                    }
+                )
+        # Adjusted logic to continue without specifying devices
+        return self.async_create_entry(title="TPMS", data={})
+        
