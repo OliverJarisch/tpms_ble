@@ -15,6 +15,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
+from homeassistant.helpers.event import async_track_time_interval
+from datetime import timedelta
+
+SCAN_INTERVAL = timedelta(minutes=2)  # Set the desired scan interval
+
+
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,8 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(
-        coordinator.async_start()
-    )  # only start after all platforms have had a chance to subscribe
+        async_track_time_interval(hass, async_scan_for_tpms_sensors, SCAN_INTERVAL)
+    )
+
     return True
 
 
@@ -47,3 +54,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+async def async_scan_for_tpms_sensors(hass: HomeAssistant):
+    """Scan for new TPMS sensors and set them up."""
+    
