@@ -77,15 +77,10 @@ class TPMSBluetoothDeviceData(BluetoothData):
         """Generate a unique ID for the TPMS sensor."""
         # Extract the last 6 characters of the MAC address (last 3 octets)
         mac_suffix = self._address.replace(":", "")[-6:].upper()  # e.g., "1386F3"
-
+    
         # Convert the manufacturer data to a hex string
         manufacturer_data_hex = ''.join(format(x, '02X') for x in self._mfr_data)
-
-        # Check if the manufacturer data starts with the expected sequence
-        if manufacturer_data_hex.startswith("0215B54A"):
-            # Use the consistent part of the MAC address as the unique ID
-            unique_id = f"tpms_{mac_suffix}"
-            return unique_id
-        else:
-            # Handle the case where the manufacturer data does not match what we expect
-            return None
+    
+        # Use the consistent part of the MAC address and manufacturer data as the unique ID
+        unique_id = f"tpms_{mac_suffix}_{manufacturer_data_hex[:4]}"
+        return unique_id
