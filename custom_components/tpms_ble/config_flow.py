@@ -99,8 +99,7 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
                         "message": "No devices found. Would you like to set up the integration and add devices later?"
                     }
                 )
-                
-            # Adjusted logic to continue without specifying devices
-            return self.async_create_entry(title="TPMS", data={})
+        # Adjusted logic to continue without specifying devices
+        return self.async_create_entry(title="TPMS", data={})
         
 
