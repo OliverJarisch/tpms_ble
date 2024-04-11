@@ -26,7 +26,7 @@ class TPMSBinarySensor(StrEnum):
     ALARM = "alarm"
 
 
-TPMS_MANUFACTURER = 256
+TPMS_MANUFACTURER = 256 # indicator of the manufacturer Data set
 
 
 class TPMSBluetoothDeviceData(BluetoothData):
@@ -36,7 +36,6 @@ class TPMSBluetoothDeviceData(BluetoothData):
         """Update from BLE advertisement data."""
         _LOGGER.debug("Parsing TPMS BLE advertisement data: %s", service_info)
         manufacturer_data = service_info.manufacturer_data
-        local_name = service_info.name
         address = service_info.address
         if TPMS_MANUFACTURER not in manufacturer_data:
             return None
@@ -44,12 +43,11 @@ class TPMSBluetoothDeviceData(BluetoothData):
         mfr_data = manufacturer_data[TPMS_MANUFACTURER]
         self.set_device_manufacturer("TPMS")
 
-        self._process_mfr_data(address, local_name, mfr_data)
+        self._process_mfr_data(address, mfr_data)
 
     def _process_mfr_data(
         self,
         address: str,
-        local_name: str,
         data: bytes,
     ) -> None:
         """Parser for TPMS sensors."""
@@ -57,14 +55,11 @@ class TPMSBluetoothDeviceData(BluetoothData):
         msg_length = len(data)
         if msg_length != 16:
             return
-        (
-            pressure,
-            temperature,
-            battery,
-            alarm
-        ) = unpack("=iib?", data[6:16])
-        pressure = pressure / 100000
-        temperature = temperature / 100
+    
+        device_id = data[4:6]  # Extrahiere die Geräte-ID (86 F3 in Ihrem Beispiel)
+        temperature = int.from_bytes(data[5:6], byteorder='big', signed=False) - 168  # Temperatur (c1 in Ihrem Beispiel)
+        pressure = int.from_bytes(data[14:16], byteorder='big', signed=False) / 10000  # Druck (83 9c in Ihrem Beispiel)
+    
 
         name = f"TPMS {short_address(address)}"
         self.set_device_type(name)
@@ -76,10 +71,4 @@ class TPMSBluetoothDeviceData(BluetoothData):
         )
         self.update_sensor(
             str(TPMSSensor.TEMPERATURE), None, temperature, None, "Temperature"
-        )
-        self.update_sensor(
-            str(TPMSSensor.BATTERY), None, battery, None, "Battery"
-        )
-        self.update_binary_sensor(
-            str(TPMSBinarySensor.ALARM), bool(alarm), None, "Alarm"
         )
