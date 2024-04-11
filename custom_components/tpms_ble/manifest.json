@@ -3,7 +3,7 @@
   "name": "TPMS_BLE",
   "bluetooth": [
     {
-      "manufacturer_id": 256
+      "manufacturer_id": 19125
     }
   ],
   "codeowners": ["@bkbilly"],
