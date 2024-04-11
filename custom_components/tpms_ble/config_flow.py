@@ -70,31 +70,41 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the user step to pick discovered device."""
+        """Handle the user step to pick discovered device or continue without device."""
         if user_input is not None:
-            address = user_input[CONF_ADDRESS]
-            await self.async_set_unique_id(address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=self._discovered_devices[address], data={}
-            )
-
+            if "confirm" in user_input:
+                # User has confirmed setup without selecting a specific device
+                return self.async_create_entry(title="TPMS", data={})
+            else:
+                address = user_input[CONF_ADDRESS]
+                await self.async_set_unique_id(address, raise_on_progress=False)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=self._discovered_devices[address], data={}
+                )
+    
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue
             device = DeviceData()
-            #_LOGGER.warning("Device %s", device")
             if device.supported(discovery_info):
                 self._discovered_devices[address] = (
                     device.title or device.get_device_name() or discovery_info.name
                 )
         _LOGGER.warning("Loop abgeschlossen")
         
-        #if not self._discovered_devices:
-        #    return self.async_abort(reason="no_devices_found")
-
+        if not self._discovered_devices:
+            # No devices discovered. Allow user to confirm setup without devices.
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {vol.Optional("confirm"): vol.Confirm()},
+                ),
+                errors={"base": "no_devices_found"},
+            )
+    
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
