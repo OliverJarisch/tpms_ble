@@ -16,6 +16,8 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TPMS."""
