@@ -33,13 +33,19 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
+
         device = DeviceData(discovery_info)
         unique_id = device.get_unique_id()
         if not unique_id:    # if none
             return self.async_abort(reason="not_supported")
 
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        existing_entry = await self.async_set_unique_id(unique_id)
+        if existing_entry:
+            # If the unique ID is already configured, perform your custom function
+            await device._start_update(discovery_info)
+            # Then abort the flow
+            return self.async_abort(reason="already_configured")
 
         self._discovery_info = discovery_info
         self._discovered_device = device
@@ -48,23 +54,44 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Confirm discovery."""
+        """Handle the step to confirm the Bluetooth discovery and set a custom name."""
         assert self._discovered_device is not None
         device = self._discovered_device
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
-        title = device.title or device.get_device_name() or discovery_info.name
+        # Use the unique ID as the fallback name if no custom name is provided by the user
+        fallback_name = self.unique_id
+    
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(title=title, data={})
-
+            # Save the custom name provided by the user, or use the unique ID as a fallback
+            custom_name = user_input.get("custom_name", fallback_name)
+            # Create the entry with the necessary data
+            return self.async_create_entry(
+                title=custom_name,  # Use custom name or unique ID as the entry title
+                data={
+                    "unique_id": self.unique_id,  # Store the unique_id
+                    "name": custom_name,  # Store the custom name
+                    # Additional fields like Pressure, Temperature will be created
+                    # later by the entity platform setup (sensor.py)
+                }
+            )
+    
+        # If no user input, show the form with the unique ID as the default custom name
         self._set_confirm_only()
-        placeholders = {"name": title}
+        placeholders = {"name": fallback_name}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
-            step_id="bluetooth_confirm", description_placeholders=placeholders
+            step_id="bluetooth_confirm",
+            description_placeholders=placeholders,
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("custom_name", default=fallback_name): str,
+                }
+            ),
+            errors=errors,
         )
-
-
+    
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -75,42 +102,4 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Proceed to create the entry for the integration without any devices
         return self.async_create_entry(title="TPMS", data={})
-        
-#    async def async_step_user(
-#        self, user_input: dict[str, Any] | None = None
-#    ) -> data_entry_flow.FlowResult:
-#        """Handle the user step to pick a discovered device or continue without a device."""
-#        errors = {}
-#    
-#        if user_input is not None:
-#            if user_input.get("confirm_setup", False):
-#                # User has confirmed setup without selecting a specific device
-#                return self.async_create_entry(title="TPMS", data={})
-#    
-#        current_addresses = self._async_current_ids()
-#        for discovery_info in async_discovered_service_info(self.hass, False):
-#            address = discovery_info.address
-#            if address in current_addresses or address in self._discovered_devices:
-#                continue
-#            device = DeviceData()
-#            if device.supported(discovery_info):
-#                self._discovered_devices[address] = (
-#                    device.title or device.get_device_name() or discovery_info.name
-#                )
-#        _LOGGER.warning("Loop abgeschlossen")
-#
-#        if not self._discovered_devices:
-#                # No devices discovered. Allow user to confirm setup without devices.
-#                return self.async_show_form(
-#                    step_id="user",
-#                    data_schema=vol.Schema(
-#                        {vol.Optional("confirm_setup", default=False): bool}
-#                    ),
-#                    errors=errors,
-#                    description_placeholders={
-#                        "message": "No devices found. Would you like to set up the integration and add devices later?"
-#                    }
-#                )
-#        # Adjusted logic to continue without specifying devices
-#        return self.async_create_entry(title="TPMS", data={})
         
