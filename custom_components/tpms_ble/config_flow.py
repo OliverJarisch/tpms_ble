@@ -36,7 +36,7 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        device = DeviceData(discovery_info)
+        device = TPMSBluetoothDeviceData(discovery_info)
         unique_id = device.get_unique_id()
         if not unique_id:
             return self.async_abort(reason="not_supported")
@@ -101,19 +101,3 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
                 {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
             ),
         )
-        
-    def get_unique_id(self):
-        # Extract the last 6 characters of the MAC address (last 3 octets)
-        mac_suffix = self.discovery_info.address.replace(":", "")[-6:].upper()  # e.g., "1386F3"
-
-        # Convert the manufacturer data to a hex string
-        manufacturer_data_hex = ''.join(format(x, '02X') for x in self.discovery_info.manufacturer_data)
-
-        # Check if the manufacturer data starts with the expected sequence
-        if manufacturer_data_hex.startswith("0215B54A"):
-            # Use the consistent part of the MAC address as the unique ID
-            unique_id = f"tpms_{mac_suffix}"
-            return unique_id
-        else:
-            # Handle the case where the manufacturer data does not match what we expect
-            return None
