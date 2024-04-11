@@ -82,11 +82,12 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
             if address in current_addresses or address in self._discovered_devices:
                 continue
             device = DeviceData()
+            _LOGGER.warning("Test for-loopo")
             if device.supported(discovery_info):
                 self._discovered_devices[address] = (
                     device.title or device.get_device_name() or discovery_info.name
                 )
-        _LOGGER.debug("Test adsaodj")
+        _LOGGER.warning("Test adsaodj")
         
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
