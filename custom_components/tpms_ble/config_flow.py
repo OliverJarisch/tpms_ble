@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
-
-from .tpms_parser import TPMSBluetoothDeviceData as DeviceData
-import voluptuous as vol
+import logging
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -13,10 +11,10 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
+import voluptuous as vol
 
 from .const import DOMAIN
-
-import logging
+from .tpms_parser import TPMSBluetoothDeviceData as DeviceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,18 +67,21 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the user step to pick discovered device or continue without device."""
+    ) -> data_entry_flow.FlowResult:
+        """Handle the user step to pick a discovered device or continue without a device."""
+        errors = {}
+
         if user_input is not None:
-            if "confirm" in user_input:
+            if user_input.get("confirm_setup", False):
                 # User has confirmed setup without selecting a specific device
                 return self.async_create_entry(title="TPMS", data={})
             else:
+                # This block would be executed if a device is selected
                 address = user_input[CONF_ADDRESS]
                 await self.async_set_unique_id(address, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self._discovered_devices[address], data={}
+                    title=self._discovered_devices[address], data=user_input
                 )
     
         current_addresses = self._async_current_ids()
@@ -100,14 +101,20 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
-                    {vol.Optional("confirm"): vol.Confirm()},
+                    {vol.Optional("confirm_setup", default=False): bool}
                 ),
-                errors={"base": "no_devices_found"},
+                errors=errors,
+                description_placeholders={
+                    "message": "No devices found. Would you like to set up the integration and add devices later?"
+                }
             )
-    
+        
+        # Show form to select a device if devices are discovered
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
             ),
+            errors=errors
         )
+
