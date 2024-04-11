@@ -16,6 +16,8 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
+import logging
+
 _LOGGER = logging.getLogger(__name__)
 
 
