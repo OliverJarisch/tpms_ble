@@ -89,8 +89,8 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         _LOGGER.warning("Loop abgeschlossen")
         
-        if not self._discovered_devices:
-            return self.async_abort(reason="no_devices_found")
+        #if not self._discovered_devices:
+        #    return self.async_abort(reason="no_devices_found")
 
         return self.async_show_form(
             step_id="user",
