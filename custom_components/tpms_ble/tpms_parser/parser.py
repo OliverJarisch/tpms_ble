@@ -36,6 +36,12 @@ class TPMSBluetoothDeviceData(BluetoothData):
     def __init__(self, service_info: BluetoothServiceInfoBleak):
         super().__init__()  # Initialize the base class with no arguments.
         self.service_info = service_info  # Store the service_info for later use.
+        manufacturer_data = service_info.manufacturer_data
+
+        if TPMS_MANUFACTURER in manufacturer_data:
+            mfr_data = manufacturer_data[TPMS_MANUFACTURER]
+            _LOGGER.warning("mfr_data: %s", mfr_data)
+
         if self.get_unique_id():
             self._start_update(service_info) # smart to do it here?
 
