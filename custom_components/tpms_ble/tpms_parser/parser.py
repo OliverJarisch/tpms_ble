@@ -42,12 +42,14 @@ class TPMSBluetoothDeviceData(BluetoothData):
 
     def _start_update(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Update from BLE advertisement data."""
-        _LOGGER.debug("Parsing TPMS BLE advertisement data: %s", service_info)
+
         manufacturer_data = service_info.manufacturer_data
         if TPMS_MANUFACTURER not in manufacturer_data:
             return None
 
         mfr_data = manufacturer_data[TPMS_MANUFACTURER]
+
+        _LOGGER.warning("mfr_data: %s", mfr_data)
         self.set_device_manufacturer("TPMS")
 
         self._process_mfr_data(mfr_data)
