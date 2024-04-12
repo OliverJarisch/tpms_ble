@@ -26,7 +26,7 @@ class TPMSBinarySensor(StrEnum):
     ALARM = "alarm"
 
 
-TPMS_MANUFACTURER = 256 # indicator of the manufacturer Data set
+TPMS_MANUFACTURER = 76 # indicator of the manufacturer Data set
 
 
 class TPMSBluetoothDeviceData(BluetoothData):
@@ -57,7 +57,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
         data: bytes,
     ) -> None:
         """Parser for TPMS sensors."""
-        _LOGGER.debug("Parsing TPMS sensor: %s", data)
+        _LOGGER.warning("Parsing TPMS sensor: %s", data)
         msg_length = len(data)
         if msg_length != 16:
             return
