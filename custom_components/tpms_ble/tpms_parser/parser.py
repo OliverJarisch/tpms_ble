@@ -40,7 +40,8 @@ class TPMSBluetoothDeviceData(BluetoothData):
 
         if TPMS_MANUFACTURER in manufacturer_data:
             mfr_data = manufacturer_data[TPMS_MANUFACTURER]
-            _LOGGER.warning("mfr_data: %s", mfr_data)
+            mfr_data_str = ':'.join(f'{byte:02x}' for byte in mfr_data)
+            _LOGGER.warning("mfr_data: %s", mfr_data_str)
 
         if self.get_unique_id():
             self._start_update(service_info) # smart to do it here?
