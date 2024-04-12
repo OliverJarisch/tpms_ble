@@ -86,7 +86,10 @@ class TPMSBluetoothDeviceData(BluetoothData):
 
         # Convert the manufacturer data to a hex string
         manufacturer_data_hex = ''.join(format(x, '02X') for x in self.service_info.manufacturer_data)
-        _LOGGER.warning("Service_Info: %s", self.service_info)
+        serv_info = ''
+        for x in self.service_info.manufacturer_data:
+            serv_info = serv_info + '' + str(x)
+        _LOGGER.warning("Service_Info: %s", serv_info)
         _LOGGER.warning("Man_Data: %s", manufacturer_data_hex)
         sensor_id = manufacturer_data_hex[32:36] # e.g., 86BC
 
