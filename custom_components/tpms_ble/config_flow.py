@@ -42,10 +42,11 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(unique_id)
         if existing_entry:
             # If the unique ID is already configured, perform your custom function
-            await device._start_update(discovery_info) # -> Make Public?
+            await device.start_update(discovery_info)  # -> Make Public?
             # Then abort the flow
             return self.async_abort(reason="already_configured")
 
+        # New Sensor: Add to Integration
         self._discovery_info = discovery_info
         self._discovered_device = device
         return await self.async_step_bluetooth_confirm()
@@ -71,8 +72,8 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     "unique_id": self.unique_id,  # Store the unique_id
                     "name": custom_name,  # Store the custom name
-                    # Additional fields like Pressure, Temperature will be created
-                    # later by the entity platform setup (sensor.py)
+                    "pressure": 0.0,  # Additional fields like Pressure, Temperature will be created
+                    "temperature": 0,  # later by the entity platform setup (sensor.py)
                 }
             )
     
@@ -100,5 +101,12 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
             pass
 
         # Proceed to create the entry for the integration without any devices
-        return self.async_create_entry(title="TPMS", data={})
+        return self.async_create_entry(
+            title="Example Sensor",  # Use custom name or unique ID as the entry title
+            data={
+                "unique_id": "TMPS_00FF",  # Store the unique_id
+                "name": "Example Sensor",  # Store the custom name
+                "pressure": 0.0,  # Additional fields like Pressure, Temperature will be created
+                "temperature": 0,  # later by the entity platform setup (sensor.py)
+            })
         
