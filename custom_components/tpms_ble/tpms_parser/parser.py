@@ -31,6 +31,14 @@ TPMS_MANUFACTURER = 256 # indicator of the manufacturer Data set
 
 class TPMSBluetoothDeviceData(BluetoothData):
     """Data for TPMS BLE sensors."""
+    # Add an __init__ method that accepts service_info and properly initializes the base class.
+
+    def __init__(self, service_info: BluetoothServiceInfoBleak):
+        super().__init__()  # Initialize the base class with no arguments.
+        self.service_info = service_info  # Store the service_info for later use.
+        if self.get_unique_id():
+            self._start_update(service_info)
+
 
     def _start_update(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Update from BLE advertisement data."""
