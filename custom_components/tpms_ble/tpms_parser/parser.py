@@ -44,18 +44,16 @@ class TPMSBluetoothDeviceData(BluetoothData):
         """Update from BLE advertisement data."""
         _LOGGER.debug("Parsing TPMS BLE advertisement data: %s", service_info)
         manufacturer_data = service_info.manufacturer_data
-        address = service_info.address
         if TPMS_MANUFACTURER not in manufacturer_data:
             return None
 
         mfr_data = manufacturer_data[TPMS_MANUFACTURER]
         self.set_device_manufacturer("TPMS")
 
-        self._process_mfr_data(mfr_data)   #(address, mfr_data)
+        self._process_mfr_data(mfr_data)
 
     def _process_mfr_data(
         self,
-#        address: str,
         data: bytes,
     ) -> None:
         """Parser for TPMS sensors."""
@@ -84,15 +82,16 @@ class TPMSBluetoothDeviceData(BluetoothData):
     def get_unique_id(self):
         """Generate a unique ID for the TPMS sensor."""
         # Extract the last 6 characters of the MAC address (last 3 octets)
-        mac_suffix = self._address.replace(":", "")[-6:].upper()  # e.g., "1386F3"
+        #mac_suffix = self._address.replace(":", "")[-6:].upper()  # e.g., "1386F3"
 
         # Convert the manufacturer data to a hex string
         manufacturer_data_hex = ''.join(format(x, '02X') for x in self._mfr_data)
+        sensor_id = manufacturer_data_hex[32:36] # e.g., 86BC
 
         # Check if the manufacturer data starts with the expected sequence
         if manufacturer_data_hex.startswith("0215B54A"):
             # Use the consistent part of the MAC address as the unique ID
-            unique_id = f"tpms_{mac_suffix}"
+            unique_id = f"tpms_{sensor_id}"
             return unique_id
         else:
             # Handle the case where the manufacturer data does not match what we expect
