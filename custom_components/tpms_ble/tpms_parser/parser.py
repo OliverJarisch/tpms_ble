@@ -68,12 +68,12 @@ class TPMSBluetoothDeviceData(BluetoothData):
         """Parser for TPMS sensors."""
         _LOGGER.warning("Parsing TPMS sensor: %s", data)
         msg_length = len(data)
-        if msg_length != 16:
+        if msg_length != 23:
             return
     
-        device_id = data[4:6]  # Extrahiere die Geräte-ID (86 F3 in Ihrem Beispiel)
-        temperature = int.from_bytes(data[5:6], byteorder='big', signed=False) - 168  # Temperatur (c1 in Ihrem Beispiel)
-        pressure = int.from_bytes(data[14:16], byteorder='big', signed=False) / 10000  # Druck (83 9c in Ihrem Beispiel)
+        device_id = data[18:20]  # Extrahiere die Geräte-ID (86 F3 in Ihrem Beispiel)
+        temperature = int.from_bytes(data[20:21], byteorder='big', signed=False) - 168  # Temperatur (c1 in Ihrem Beispiel)
+        pressure = int.from_bytes(data[21:23], byteorder='big', signed=False) / 10000  # Druck (83 9c in Ihrem Beispiel)
     
 
 #        name = f"TPMS {short_address(address)}"
@@ -98,12 +98,11 @@ class TPMSBluetoothDeviceData(BluetoothData):
         serv_info = ''
         for x in self.service_info.manufacturer_data:
             serv_info = serv_info + '' + str(x)
-        _LOGGER.warning("Service_Info: %s", serv_info)
-        _LOGGER.warning("Man_Data: %s", manufacturer_data_hex)
+
         sensor_id = manufacturer_data_hex[32:36] # e.g., 86BC
 
         # Check if the manufacturer data starts with the expected sequence
-        if manufacturer_data_hex.startswith("0215B54A"):
+        if manufacturer_data_hex.startswith("0215"): # reads also Tesla Sensors
             # Use the consistent part of the MAC address as the unique ID
             unique_id = f"tpms_{sensor_id}"
             return unique_id
