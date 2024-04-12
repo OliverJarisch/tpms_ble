@@ -94,12 +94,10 @@ class TPMSBluetoothDeviceData(BluetoothData):
         #mac_suffix = self._address.replace(":", "")[-6:].upper()  # e.g., "1386F3"
 
         # Convert the manufacturer data to a hex string
-        manufacturer_data_hex = ''.join(format(x, '02X') for x in self.service_info.manufacturer_data)
-        serv_info = ''
-        for x in self.service_info.manufacturer_data:
-            serv_info = serv_info + '' + str(x)
+        mfr_data = self.service_info.manufacturer_data[TPMS_MANUFACTURER]
+        manufacturer_data_hex = ''.join(format(x, '02X') for x in mfr_data)
 
-        sensor_id = manufacturer_data_hex[32:36] # e.g., 86BC
+        sensor_id = manufacturer_data_hex[18:20] # e.g., 86BC
 
         # Check if the manufacturer data starts with the expected sequence
         if manufacturer_data_hex.startswith("0215"): # reads also Tesla Sensors
