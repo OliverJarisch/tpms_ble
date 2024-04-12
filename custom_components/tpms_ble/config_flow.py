@@ -39,11 +39,10 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not unique_id:    # if none
             return self.async_abort(reason="not_supported")
 
-        await self.async_set_unique_id(unique_id)
         existing_entry = await self.async_set_unique_id(unique_id)
         if existing_entry:
             # If the unique ID is already configured, perform your custom function
-            await device._start_update(discovery_info)
+            await device._start_update(discovery_info) # -> Make Public?
             # Then abort the flow
             return self.async_abort(reason="already_configured")
 

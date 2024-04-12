@@ -37,7 +37,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
         super().__init__()  # Initialize the base class with no arguments.
         self.service_info = service_info  # Store the service_info for later use.
         if self.get_unique_id():
-            self._start_update(service_info)
+            self._start_update(service_info) # smart to do it here?
 
 
     def _start_update(self, service_info: BluetoothServiceInfoBleak) -> None:
@@ -86,7 +86,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
 
         # Convert the manufacturer data to a hex string
         manufacturer_data_hex = ''.join(format(x, '02X') for x in self.service_info.manufacturer_data)
-        _LOGGER.debug("Man_Data: %s", manufacturer_data_hex)
+        _LOGGER.warning("Man_Data: %s", manufacturer_data_hex)
         sensor_id = manufacturer_data_hex[32:36] # e.g., 86BC
 
         # Check if the manufacturer data starts with the expected sequence
