@@ -29,17 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities) -> bool:
-    """Set up TPMS BLE device from a config entry."""
-
-    installed_sensors = ["TPMS_186F3", "TPMS_184C6", "TPMS_18511", "TPMS_186BC", "TPMS_18764"]
-    for unique_id in installed_sensors:
-        sensors = [PressureSensor(unique_id), TemperatureSensor(unique_id)]
-        async_add_entities(sensors)
-        _LOGGER.warning("Sesnor %s added", unique_id)
-
-    return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
