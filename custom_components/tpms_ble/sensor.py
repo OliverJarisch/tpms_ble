@@ -26,6 +26,7 @@ class BaseSensor(Entity):
             "manufacturer": "MaxxSensor",
             "model": "BSI-03",
         }
+        self._attr_should_poll = False  # Disable automatic polling
 
 
 class PressureSensor(BaseSensor):
