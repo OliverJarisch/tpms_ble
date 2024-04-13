@@ -53,7 +53,7 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hass.states.async_set(f"sensor.{unique_id}_pressure", device.get_pressure(), {})
         self.hass.states.async_set(f"sensor.{unique_id}_temperature", device.get_temperature(), {})
 
-        _LOGGER.warning("Sensor %s updated!", unique_id)
+        _LOGGER.warning(f"Sensor {unique_id} updated {device.get_pressure()} & {device.get_temperature()} !", unique_id)
         return self.async_abort(reason="finished")
     
     async def async_step_user(

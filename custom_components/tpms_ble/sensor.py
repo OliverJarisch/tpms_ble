@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import PRESSURE_BAR
+from homeassistant.const import TEMP_CELSIUS
 
 import logging
 
@@ -31,7 +33,8 @@ class PressureSensor(BaseSensor):
         super().__init__("Pressure Sensor", device_id)
         self.entity_id = f"sensor.{device_id}_pressure"
         self._attr_name = f"{device_id} Pressure"
-        self._state = 0.00  # Pressure in Bar
+        self._attr_unit_of_measurement = PRESSURE_BAR
+        self._state = None
 
     @property
     def state(self):
@@ -56,7 +59,8 @@ class TemperatureSensor(BaseSensor):
         super().__init__("Temperature Sensor", device_id)
         self.entity_id = f"sensor.{device_id}_temperature"
         self._attr_name = f"{device_id} Temperature"
-        self._state = 0  # Temperature in Celsius
+        self._attr_unit_of_measurement = TEMP_CELSIUS
+        self._state = None
 
     @property
     def state(self):
