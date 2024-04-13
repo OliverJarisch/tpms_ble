@@ -13,6 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .sensor import (PressureSensor, TemperatureSensor)
+
 from .const import DOMAIN
 
 from homeassistant.helpers.event import async_track_time_interval
@@ -26,18 +28,15 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up TPMS BLE device from a config entry."""
-    address = entry.unique_id
-    if address is None:
-        _LOGGER.info("Skipping setup for non-TPMS device with config entry: %s", entry.as_dict())
-        return False
-        
-    # Create a data coordinator instance (you may or may not need this depending on your implementation)
-    # hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TPMSBluetoothDeviceData()
 
-    # Forward the entry setup to the sensor platform, which will create the sensor entities
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+async def async_setup_user(hass, config_entry, async_add_entities) -> bool:
+    """Set up TPMS BLE device from a config entry."""
+
+    installed_sensors = ["TPMS_186F3", "TPMS_184C6", "TPMS_18511", "TPMS_186BC", "TPMS_18764"]
+    for unique_id in installed_sensors:
+        sensors = [PressureSensor(unique_id), TemperatureSensor(unique_id)]
+        async_add_entities(sensors)
+        _LOGGER.warning("Sesnor %s added", unique_id)
 
     return True
 

@@ -1,106 +1,68 @@
 """Support for TPMS sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
+from homeassistant.helpers.entity import Entity
 
-from .tpms_parser import TPMSSensor, SensorUpdate
-
-from homeassistant import config_entries
-from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothDataProcessor,
-    PassiveBluetoothDataUpdate,
-    PassiveBluetoothProcessorCoordinator,
-    PassiveBluetoothProcessorEntity,
-)
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    PERCENTAGE,
-    UnitOfPressure,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .device import device_key_to_bluetooth_entity_key
-
-SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    TPMSSensor.PRESSURE: SensorEntityDescription(
-        key=TPMSSensor.PRESSURE,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.BAR,
-    ),
-    TPMSSensor.TEMPERATURE: SensorEntityDescription(
-        key=TPMSSensor.TEMPERATURE,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
-}
 
 
-def sensor_update_to_bluetooth_data_update(
-    sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
-    """Convert a sensor update to a bluetooth data update."""
-    return PassiveBluetoothDataUpdate(
-        devices={
-            device_id: sensor_device_info_to_hass_device_info(device_info)
-            for device_id, device_info in sensor_update.devices.items()
-        },
-        entity_descriptions={
-            device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                device_key.key
-            ]
-            for device_key in sensor_update.entity_descriptions
-        },
-        entity_data={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
-            for device_key, sensor_values in sensor_update.entity_values.items()
-        },
-        entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-        },
-    )
+class BaseSensor(Entity):
+    """Base sensor representing a device."""
+
+    def __init__(self, name, device_id):
+        self._name = name
+        self._device_id = device_id
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, device_id)},
+            "name": "Default",
+            "manufacturer": "MaxxSensor",
+            "model": "BSI-03",
+        }
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the TPMS BLE sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
-    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
-    entry.async_on_unload(
-        processor.async_add_entities_listener(
-            TPMSBluetoothSensorEntity, async_add_entities
-        )
-    )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+class PressureSensor(BaseSensor):
+    """Pressure sensor entity."""
 
-
-class TPMSBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[str, int]]]
-    ],
-    SensorEntity,
-):
-    """Representation of a TPMS sensor."""
+    def __init__(self, device_id):
+        super().__init__("Pressure Sensor", device_id)
+        self._state = 0.00  # Pressure in Bar
 
     @property
-    def native_value(self) -> str | int | None:
-        """Return the native value."""
-        return self.processor.entity_data.get(self.entity_key)
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return 'Bar'
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._device_id}_pressure"
+
+
+class TemperatureSensor(BaseSensor):
+    """Temperature sensor entity."""
+
+    def __init__(self, device_id):
+        super().__init__("Temperature Sensor", device_id)
+        self._state = 0  # Temperature in Celsius
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return '°C'
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._device_id}_temperature"
+

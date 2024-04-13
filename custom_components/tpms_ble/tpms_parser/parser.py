@@ -9,21 +9,10 @@ from enum import Enum, auto
 from bluetooth_data_tools import short_address
 from bluetooth_sensor_state_data import BluetoothData
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
-from sensor_state_data.enum import StrEnum
+from ..sensor import TPMSSensor
+
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class TPMSSensor(StrEnum):
-
-    PRESSURE = "pressure"
-    TEMPERATURE = "temperature"
-    BATTERY = "battery"
-    SIGNAL_STRENGTH = "signal_strength"
-
-
-class TPMSBinarySensor(StrEnum):
-    ALARM = "alarm"
 
 
 TPMS_MANUFACTURER = 76 # 004c for apple - cause the sensors say there are apple seonsors...
