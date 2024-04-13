@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import PRESSURE_BAR
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfPressure
+from homeassistant.const import UnitOfTemperature
+
+from homeassistant.helpers import device_registry as dr
 
 import logging
 
@@ -33,7 +35,7 @@ class PressureSensor(BaseSensor):
         super().__init__("Pressure Sensor", device_id)
         self.entity_id = f"sensor.{device_id}_pressure"
         self._attr_name = f"{device_id} Pressure"
-        self._attr_unit_of_measurement = PRESSURE_BAR
+        self._attr_unit_of_measurement = UnitOfPressure.BAR
         self._state = None
 
     @property
@@ -59,7 +61,7 @@ class TemperatureSensor(BaseSensor):
         super().__init__("Temperature Sensor", device_id)
         self.entity_id = f"sensor.{device_id}_temperature"
         self._attr_name = f"{device_id} Temperature"
-        self._attr_unit_of_measurement = TEMP_CELSIUS
+        self._attr_unit_of_measurement = UnitOfTemperature.CELSIUS
         self._state = None
 
     @property
@@ -82,12 +84,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> bool:
     """Set up TPMS BLE device from a config entry."""
 
     installed_sensors = ["TPMS_186F3", "TPMS_184C6", "TPMS_18511", "TPMS_186BC", "TPMS_18764"]
+
+    dev_registry = dr.async_get(hass)
     entities = []
     for unique_id in installed_sensors:
-        # Append each new entity to the entities list
-        entities.append(PressureSensor(unique_id))
-        entities.append(TemperatureSensor(unique_id))
-        _LOGGER.warning("Sensor %s added", unique_id)
+        _device_exist = False
+        for hass_device in dev_registry.devices.values():
+            # The device name might be under `name` or `name_by_user`.
+            if hass_device.name == unique_id:
+                _device_exist = True
+
+        if not _device_exist:
+            entities.append(PressureSensor(unique_id))
+            entities.append(TemperatureSensor(unique_id))
+            _LOGGER.warning("Sensor %s added", unique_id)
 
     # Add all entities at once
     if entities:
