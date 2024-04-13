@@ -9,8 +9,6 @@ from enum import Enum, auto
 from bluetooth_data_tools import short_address
 from bluetooth_sensor_state_data import BluetoothData
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
-from ..sensor import TPMSSensor
-
 
 _LOGGER = logging.getLogger(__name__)
 
