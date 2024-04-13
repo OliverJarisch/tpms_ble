@@ -83,6 +83,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> bool:
 
     # Add all entities at once
     if entities:
-        hass.async_add_job(hass.async_add_entities(entities))
+        async_add_entities(entities)
 
     return True

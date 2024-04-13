@@ -109,7 +109,5 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 "unique_id": "TMPS_00FF",  # Store the unique_id
                 "name": "Example Sensor",  # Store the custom name
-                "pressure": 0.0,  # Additional fields like Pressure, Temperature will be created
-                "temperature": 0,  # later by the entity platform setup (sensor.py)
             })
         
