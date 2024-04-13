@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-async def async_setup_user(hass, config_entry, async_add_entities) -> bool:
+async def async_setup_entry(hass, config_entry, async_add_entities) -> bool:
     """Set up TPMS BLE device from a config entry."""
 
     installed_sensors = ["TPMS_186F3", "TPMS_184C6", "TPMS_18511", "TPMS_186BC", "TPMS_18764"]
