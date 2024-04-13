@@ -50,8 +50,14 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not _device_exist:
             return self.async_abort(reason="parent_missing")
 
-        self.hass.states.async_set(f"sensor.{unique_id}_pressure", device.get_pressure(), {})
-        self.hass.states.async_set(f"sensor.{unique_id}_temperature", device.get_temperature(), {})
+        self.hass.states.async_set(
+            f"sensor.{unique_id}_pressure",
+            device.get_pressure(),
+            {"unit_of_measurement": "bar"})
+        self.hass.states.async_set(
+            f"sensor.{unique_id}_temperature",
+            device.get_temperature(),
+            {"unit_of_measurement": "°C"})
 
         _LOGGER.warning(f"Sensor {unique_id} updated {device.get_pressure()} & {device.get_temperature()} !", unique_id)
         return self.async_abort(reason="finished")
