@@ -70,13 +70,19 @@ class TemperatureSensor(BaseSensor):
         return f"{self._device_id}_temperature"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities) -> bool:
+async def async_setup_entry(hass, config_entry) -> bool:
     """Set up TPMS BLE device from a config entry."""
 
     installed_sensors = ["TPMS_186F3", "TPMS_184C6", "TPMS_18511", "TPMS_186BC", "TPMS_18764"]
+    entities = []
     for unique_id in installed_sensors:
-        sensors = [PressureSensor(unique_id), TemperatureSensor(unique_id)]
-        async_add_entities(sensors)
-        _LOGGER.warning("Sesnor %s added", unique_id)
+        # Append each new entity to the entities list
+        entities.append(PressureSensor(unique_id))
+        entities.append(TemperatureSensor(unique_id))
+        _LOGGER.warning("Sensor %s added", unique_id)
+
+    # Add all entities at once
+    if entities:
+        hass.async_add_job(hass.async_add_entities(entities))
 
     return True

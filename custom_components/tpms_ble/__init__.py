@@ -28,6 +28,22 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the tpms_ble component."""
+    # Handle YAML configuration if necessary
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up tpms_ble from a config entry."""
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
+    )
+    # If you have other platforms like lights or switches, forward them as well
+    # hass.async_create_task(
+    #     hass.config_entries.async_forward_entry_setup(entry, Platform.LIGHT)
+    # )
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
