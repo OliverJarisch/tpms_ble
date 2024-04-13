@@ -36,7 +36,7 @@ class PressureSensor(BaseSensor):
         super().__init__("Pressure Sensor", device_id)
         self.entity_id = f"sensor.{device_id}_pressure"
         self._attr_name = f"{device_id} Pressure"
-        self._attr_unit_of_measurement = UnitOfPressure.BAR
+        self._attr_unit_of_measurement = "bar"
         self._state = None
 
     @property
@@ -62,7 +62,7 @@ class TemperatureSensor(BaseSensor):
         super().__init__("Temperature Sensor", device_id)
         self.entity_id = f"sensor.{device_id}_temperature"
         self._attr_name = f"{device_id} Temperature"
-        self._attr_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._attr_unit_of_measurement = "°C"
         self._state = None
 
     @property
