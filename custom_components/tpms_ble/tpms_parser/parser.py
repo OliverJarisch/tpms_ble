@@ -25,11 +25,6 @@ class TPMSBluetoothDeviceData(BluetoothData):
         self.service_info = service_info  # Store the service_info for later use.
         manufacturer_data = service_info.manufacturer_data
 
-        if TPMS_MANUFACTURER in manufacturer_data:
-            mfr_data = manufacturer_data[TPMS_MANUFACTURER]
-            mfr_data_str = ':'.join(f'{byte:02x}' for byte in mfr_data)
-            _LOGGER.warning("mfr_data (init): %s", mfr_data_str)
-
         self._manufacturer_data = self._get_manufacturer_data()
 
         if not self._manufacturer_data:
