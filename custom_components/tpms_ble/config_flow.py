@@ -42,9 +42,9 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         dev_registry = dr.async_get(self.hass)
         _device_exist = False
-        for device in dev_registry.devices.values():
+        for hass_device in dev_registry.devices.values():
             # The device name might be under `name` or `name_by_user`.
-            if device.name == unique_id:
+            if hass_device.name == unique_id:
                 _device_exist = True
 
         if not _device_exist:
