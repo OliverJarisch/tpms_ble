@@ -96,6 +96,8 @@ class TPMSBluetoothDeviceData(BluetoothData):
 
         if len(mfr_data) != 23:
             return None
+        else:
+            _LOGGER.warning("mfr len requirement not met: %s", len(mfr_data))
 
         manufacturer_data_hex = ''.join(format(x, '02X') for x in mfr_data)
 
@@ -107,5 +109,6 @@ class TPMSBluetoothDeviceData(BluetoothData):
             unique_id = f"tpms_{sensor_id}"
             return unique_id
         else:
+            _LOGGER.warning("mfr prefix requirement not met: %s", manufacturer_data_hex[0:4])
             # Handle the case where the manufacturer data does not match what we expect
             return None
