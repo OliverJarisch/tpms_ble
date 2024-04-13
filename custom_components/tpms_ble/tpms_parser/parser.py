@@ -106,7 +106,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
         # Check if the manufacturer data starts with the expected sequence
         if manufacturer_data_hex.startswith("0215"):  # reads also Tesla Sensors
             # Use the consistent part of the MAC address as the unique ID
-            unique_id = f"tpms_{sensor_id}"
+            unique_id = f"tpms_1{sensor_id}"
             return unique_id
         else:
             _LOGGER.warning("mfr prefix requirement not met: %s", manufacturer_data_hex[0:4])
