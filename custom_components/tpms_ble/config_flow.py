@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import device_registry as dr
 import voluptuous as vol
 
 from .const import DOMAIN
@@ -39,61 +40,21 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not unique_id:    # if none
             return self.async_abort(reason="not_supported")
 
-        existing_entry = await self.async_set_unique_id(unique_id)
-        if existing_entry:
-            # If the unique ID is already configured, perform your custom function
-            await device.start_update(discovery_info)  # -> Make Public?
-            # Then abort the flow
-            return self.async_abort(reason="already_configured")
+        dev_registry = dr.async_get(self.hass)
+        _device_exist = False
+        for device in dev_registry.devices.values():
+            # The device name might be under `name` or `name_by_user`.
+            if device.name == unique_id:
+                _device_exist = True
 
-        # New Sensor: Add to Integration
-        self._discovery_info = discovery_info
-        self._discovered_device = device
-        return await self.async_step_bluetooth_confirm()
-        
-    async def async_step_bluetooth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the step to confirm the Bluetooth discovery and set a custom name."""
-        assert self._discovered_device is not None
-        device = self._discovered_device
-        assert self._discovery_info is not None
-        discovery_info = self._discovery_info
-        # Use the unique ID as the fallback name if no custom name is provided by the user
-        fallback_name = self.unique_id
-    
-        errors = {}
-        if user_input is not None:
-            _LOGGER.warning("user_input is not none: %s", user_input)
-            # Save the custom name provided by the user, or use the unique ID as a fallback
-            custom_name = user_input.get("custom_name", fallback_name)
-            # Create the entry with the necessary data
-            return self.async_create_entry(
-                title=custom_name,  # Use custom name or unique ID as the entry title
-                data={
-                    "unique_id": self.unique_id,  # Store the unique_id
-                    "name": custom_name,  # Store the custom name
-                    "pressure": 0.0,  # Additional fields like Pressure, Temperature will be created
-                    "temperature": 0,  # later by the entity platform setup (sensor.py)
-                }
-            )
-        else:
-            _LOGGER.warning("user_input is none")
-    
-        # If no user input, show the form with the unique ID as the default custom name
-        self._set_confirm_only()
-        placeholders = {"name": fallback_name}
-        self.context["title_placeholders"] = placeholders
-        return self.async_show_form(
-            step_id="bluetooth_confirm",
-            description_placeholders=placeholders,
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("custom_name", default=fallback_name): str,
-                }
-            ),
-            errors=errors,
-        )
+        if not _device_exist:
+            return self.async_abort(reason="parent_missing")
+
+        self.hass.states.async_set(f"sensor.{unique_id}_pressure", device.get_pressure(), {})
+        self.hass.states.async_set(f"sensor.{unique_id}_temperature", device.get_temperature(), {})
+
+        _LOGGER.warning("Sensor %s updated!", unique_id)
+        return self.async_abort(reason="finished")
     
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -105,9 +66,9 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Proceed to create the entry for the integration without any devices
         return self.async_create_entry(
-            title="Example Sensor",  # Use custom name or unique ID as the entry title
+            title="TPMS Head Unit",  # Use custom name or unique ID as the entry title
             data={
-                "unique_id": "TMPS_00FF",  # Store the unique_id
-                "name": "Example Sensor",  # Store the custom name
+                "unique_id": "TMPS_Amarok",  # Store the unique_id
+                "name": "TPMS Head Unit",  # Store the custom name
             })
         

@@ -30,50 +30,48 @@ class TPMSBluetoothDeviceData(BluetoothData):
             mfr_data_str = ':'.join(f'{byte:02x}' for byte in mfr_data)
             _LOGGER.warning("mfr_data (init): %s", mfr_data_str)
 
-        # if self.get_unique_id():
-        #    self._start_update(service_info)  # smart to do it here?
+        self._manufacturer_data = self._get_manufacturer_data()
 
-    def start_update(self, service_info: BluetoothServiceInfoBleak) -> None:
+        if not self._manufacturer_data:
+            return
+
+        self._unique_id = self._extract_unique_id()
+        if not self._unique_id:
+            return
+
+        self._process_mfr_data()
+
+    def get_unique_id(self):
+        return self._unique_id
+
+    def get_temperature(self):
+        return self._temperature
+
+    def get_pressure(self):
+        return self._pressure
+
+
+    def _get_manufacturer_data(self) -> bytes | None:
         """Update from BLE advertisement data."""
 
-        manufacturer_data = service_info.manufacturer_data
+        manufacturer_data = self.service_info.manufacturer_data
         if TPMS_MANUFACTURER not in manufacturer_data:
             return None
 
         mfr_data = manufacturer_data[TPMS_MANUFACTURER]
 
-        _LOGGER.warning("mfr_data (update): %s", mfr_data)
-        self.set_device_manufacturer("TPMS")
-
-        self._process_mfr_data(mfr_data)
+        return mfr_data
 
     def _process_mfr_data(
         self,
-        data: bytes,
     ) -> None:
         """Parser for TPMS sensors."""
-        _LOGGER.warning("Parsing TPMS sensor: %s", data)
-        if len(data) != 23:
-            return
-    
-        device_id = data[18:20]  # Extrahiere die Geräte-ID (86 F3 im Beispiel)
-        temperature = int.from_bytes(data[20:21], byteorder='big', signed=False) - 168  # Temperatur (c1 im Beispiel)
-        pressure = int.from_bytes(data[21:23], byteorder='big', signed=False) / 10000  # Druck (83 9c im Beispiel)
-    
+        data = self._manufacturer_data
+        self._temperature = int.from_bytes(data[20:21], byteorder='big', signed=False) - 168  # Temperatur (c1 im Beispiel)
+        self._pressure = int.from_bytes(data[21:23], byteorder='big', signed=False) / 10000  # Druck (83 9c im Beispiel)
 
-#        name = f"TPMS {short_address(address)}"
-#        self.set_device_type(name)
-#        self.set_device_name(name)
-#        self.set_title(name)
-#
-#        self.update_sensor(
-#            str(TPMSSensor.PRESSURE), None, pressure, None, "Pressure"
-#        )
-#        self.update_sensor(
-#            str(TPMSSensor.TEMPERATURE), None, temperature, None, "Temperature"
-#        )
 
-    def get_unique_id(self):
+    def _extract_unique_id(self):
         """Generate a unique ID for the TPMS sensor."""
         # Extract the last 6 characters of the MAC address (last 3 octets)
         # mac_suffix = self._address.replace(":", "")[-6:].upper()  # e.g., "1386F3"
@@ -92,7 +90,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
         # Check if the manufacturer data starts with the expected sequence
         if manufacturer_data_hex.startswith("0215"):  # reads also Tesla Sensors
             # Use the consistent part of the MAC address as the unique ID
-            unique_id = f"tpms_1{sensor_id}"
+            unique_id = f"TPMS_1{sensor_id}"
             _LOGGER.warning("mfr: Real sensor detected: %s", unique_id)
             return unique_id
         else:

@@ -29,7 +29,8 @@ class PressureSensor(BaseSensor):
 
     def __init__(self, device_id):
         super().__init__("Pressure Sensor", device_id)
-        self._attr_name = "Pressure"
+        self.entity_id = f"sensor.{device_id}_pressure"
+        self._attr_name = f"{device_id} Pressure"
         self._state = 0.00  # Pressure in Bar
 
     @property
@@ -45,7 +46,7 @@ class PressureSensor(BaseSensor):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._device_id}_pressure"
+        return self.entity_id
 
 
 class TemperatureSensor(BaseSensor):
@@ -53,7 +54,8 @@ class TemperatureSensor(BaseSensor):
 
     def __init__(self, device_id):
         super().__init__("Temperature Sensor", device_id)
-        self._attr_name = "Temperature"
+        self.entity_id = f"sensor.{device_id}_temperature"
+        self._attr_name = f"{device_id} Temperature"
         self._state = 0  # Temperature in Celsius
 
     @property
@@ -69,7 +71,7 @@ class TemperatureSensor(BaseSensor):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._device_id}_temperature"
+        return self.entity_id
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> bool:
