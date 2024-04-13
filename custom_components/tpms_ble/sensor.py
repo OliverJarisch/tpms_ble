@@ -18,7 +18,7 @@ class BaseSensor(Entity):
         self._device_id = device_id
         self._attr_device_info = {
             "identifiers": {(DOMAIN, device_id)},
-            "name": "Default",
+            "name": device_id,
             "manufacturer": "MaxxSensor",
             "model": "BSI-03",
         }
@@ -29,6 +29,7 @@ class PressureSensor(BaseSensor):
 
     def __init__(self, device_id):
         super().__init__("Pressure Sensor", device_id)
+        self._attr_name = "Pressure"
         self._state = 0.00  # Pressure in Bar
 
     @property
@@ -52,6 +53,7 @@ class TemperatureSensor(BaseSensor):
 
     def __init__(self, device_id):
         super().__init__("Temperature Sensor", device_id)
+        self._attr_name = "Temperature"
         self._state = 0  # Temperature in Celsius
 
     @property
