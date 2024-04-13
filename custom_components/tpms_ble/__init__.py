@@ -20,8 +20,6 @@ from .const import DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from datetime import timedelta
 
-SCAN_INTERVAL = timedelta(minutes=2)  # Set the desired scan interval
-
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -34,15 +32,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tpms_ble from a config entry."""
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
     )
-    # If you have other platforms like lights or switches, forward them as well
-    # hass.async_create_task(
-    #     hass.config_entries.async_forward_entry_setup(entry, Platform.LIGHT)
-    # )
     return True
 
 
