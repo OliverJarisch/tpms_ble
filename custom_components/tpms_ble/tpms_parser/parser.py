@@ -23,7 +23,6 @@ class TPMSBluetoothDeviceData(BluetoothData):
     def __init__(self, service_info: BluetoothServiceInfoBleak):
         super().__init__()  # Initialize the base class with no arguments.
         self.service_info = service_info  # Store the service_info for later use.
-        manufacturer_data = service_info.manufacturer_data
 
         self._manufacturer_data = self._get_manufacturer_data()
 
@@ -63,7 +62,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
         """Parser for TPMS sensors."""
         data = self._manufacturer_data
         self._temperature = int.from_bytes(data[20:21], byteorder='big', signed=False) - 168  # Temperatur (c1 im Beispiel)
-        self._pressure = int.from_bytes(data[21:23], byteorder='big', signed=False) / 10000  # Druck (83 9c im Beispiel)
+        self._pressure = round(int.from_bytes(data[21:23], byteorder='big', signed=False) / 10000, 2)  # Druck (83 9c im Beispiel)
 
 
     def _extract_unique_id(self):
