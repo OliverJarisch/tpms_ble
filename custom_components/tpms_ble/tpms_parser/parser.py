@@ -65,13 +65,13 @@ class TPMSBluetoothDeviceData(BluetoothData):
 #        self.set_device_type(name)
 #        self.set_device_name(name)
 #        self.set_title(name)
-
-        self.update_sensor(
-            str(TPMSSensor.PRESSURE), None, pressure, None, "Pressure"
-        )
-        self.update_sensor(
-            str(TPMSSensor.TEMPERATURE), None, temperature, None, "Temperature"
-        )
+#
+#        self.update_sensor(
+#            str(TPMSSensor.PRESSURE), None, pressure, None, "Pressure"
+#        )
+#        self.update_sensor(
+#            str(TPMSSensor.TEMPERATURE), None, temperature, None, "Temperature"
+#        )
 
     def get_unique_id(self):
         """Generate a unique ID for the TPMS sensor."""
