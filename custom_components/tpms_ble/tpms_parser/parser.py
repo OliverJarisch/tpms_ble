@@ -80,7 +80,6 @@ class TPMSBluetoothDeviceData(BluetoothData):
         mfr_data = self.service_info.manufacturer_data[TPMS_MANUFACTURER]
 
         if len(mfr_data) != 23:
-            _LOGGER.warning("mfr len requirement not met: %s", len(mfr_data))
             return None
 
         manufacturer_data_hex = ''.join(format(x, '02X') for x in mfr_data)
@@ -91,9 +90,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
         if manufacturer_data_hex.startswith("0215"):  # reads also Tesla Sensors
             # Use the consistent part of the MAC address as the unique ID
             unique_id = f"TPMS_1{sensor_id}"
-            _LOGGER.warning("mfr: Real sensor detected: %s", unique_id)
             return unique_id
         else:
-            _LOGGER.warning("mfr prefix requirement not met: %s", manufacturer_data_hex[0:4])
             # Handle the case where the manufacturer data does not match what we expect
             return None
