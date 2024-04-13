@@ -64,6 +64,7 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
     
         errors = {}
         if user_input is not None:
+            _LOGGER.warning("user_input is not none: %s", user_input)
             # Save the custom name provided by the user, or use the unique ID as a fallback
             custom_name = user_input.get("custom_name", fallback_name)
             # Create the entry with the necessary data
@@ -76,6 +77,8 @@ class TPMSConfigFlow(ConfigFlow, domain=DOMAIN):
                     "temperature": 0,  # later by the entity platform setup (sensor.py)
                 }
             )
+        else:
+            _LOGGER.warning("user_input is none")
     
         # If no user input, show the form with the unique ID as the default custom name
         self._set_confirm_only()

@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
         
     # Create a data coordinator instance (you may or may not need this depending on your implementation)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TPMSBluetoothDeviceData()
+    # hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TPMSBluetoothDeviceData()
 
     # Forward the entry setup to the sensor platform, which will create the sensor entities
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
