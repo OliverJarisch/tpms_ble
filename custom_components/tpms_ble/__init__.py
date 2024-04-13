@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up tpms_ble from a config entry."""
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
