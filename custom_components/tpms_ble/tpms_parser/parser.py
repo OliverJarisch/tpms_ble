@@ -101,7 +101,7 @@ class TPMSBluetoothDeviceData(BluetoothData):
 
         manufacturer_data_hex = ''.join(format(x, '02X') for x in mfr_data)
 
-        sensor_id = manufacturer_data_hex[18:20]  # e.g., 86BC
+        sensor_id = manufacturer_data_hex[36:40]  # e.g., 86BC
 
         # Check if the manufacturer data starts with the expected sequence
         if manufacturer_data_hex.startswith("0215"):  # reads also Tesla Sensors
